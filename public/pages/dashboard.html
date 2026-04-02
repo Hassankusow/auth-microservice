@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Auth Microservice</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body style="align-items: flex-start; padding: 2rem;">
+  <div class="dashboard">
+
+    <div class="dashboard-header">
+      <div>
+        <h1>🛡️ Auth Microservice</h1>
+        <p style="color:#94a3b8; font-size:0.875rem; margin-top:0.25rem">
+          Live API Demo — test all endpoints below
+        </p>
+      </div>
+      <button class="btn btn-danger" style="width:auto; padding:0.5rem 1rem; margin-top:0"
+              onclick="logout()">Sign Out</button>
+    </div>
+
+    <!-- User info -->
+    <div style="background:#0f0f1a; border:1px solid #2d2d4e; border-radius:10px; padding:1rem; margin-bottom:1.5rem">
+      <p style="font-size:0.8rem; color:#94a3b8; margin-bottom:0.4rem">SIGNED IN AS</p>
+      <p id="userEmail" style="font-weight:700; font-size:1rem"></p>
+      <span id="userBadge" class="badge" style="margin-top:0.4rem"></span>
+    </div>
+
+    <!-- JWT Token display -->
+    <p style="font-size:0.8rem; color:#94a3b8; margin-bottom:0.4rem">CURRENT JWT TOKEN</p>
+    <div class="token-box show" id="tokenDisplay"></div>
+
+    <hr class="divider" />
+
+    <!-- Endpoint Tests -->
+    <h2 style="font-size:1rem; margin-bottom:1rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em">
+      Test Endpoints
+    </h2>
+
+    <div class="endpoint-grid">
+
+      <!-- GET /me -->
+      <div class="endpoint-card">
+        <h3>Get Current User</h3>
+        <p>
+          <span class="method method-get">GET</span>
+          <span class="endpoint-path">/api/auth/me</span>
+        </p>
+        <button class="btn btn-secondary" style="margin-top:0.75rem" onclick="testMe()">
+          Run Request
+        </button>
+        <div class="response-box" id="meResponse">// response will appear here</div>
+      </div>
+
+      <!-- GET /admin/users -->
+      <div class="endpoint-card">
+        <h3>List All Users <span style="color:#6366f1">(Admin)</span></h3>
+        <p>
+          <span class="method method-get">GET</span>
+          <span class="endpoint-path">/api/auth/admin/users</span>
+        </p>
+        <button class="btn btn-secondary" style="margin-top:0.75rem" onclick="testAdminUsers()">
+          Run Request
+        </button>
+        <div class="response-box" id="adminResponse">// response will appear here</div>
+      </div>
+
+      <!-- Health Check -->
+      <div class="endpoint-card">
+        <h3>Health Check</h3>
+        <p>
+          <span class="method method-get">GET</span>
+          <span class="endpoint-path">/api/health</span>
+        </p>
+        <button class="btn btn-secondary" style="margin-top:0.75rem" onclick="testHealth()">
+          Run Request
+        </button>
+        <div class="response-box" id="healthResponse">// response will appear here</div>
+      </div>
+
+      <!-- Invalid Token Test -->
+      <div class="endpoint-card">
+        <h3>Test Invalid Token</h3>
+        <p>
+          <span class="method method-get">GET</span>
+          <span class="endpoint-path">/api/auth/me</span>
+        </p>
+        <button class="btn btn-secondary" style="margin-top:0.75rem" onclick="testInvalidToken()">
+          Send Bad Token
+        </button>
+        <div class="response-box" id="invalidResponse">// response will appear here</div>
+      </div>
+
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Register new user -->
+    <div class="endpoint-card" style="max-width:420px">
+      <h3>Register New User</h3>
+      <p style="margin-bottom:0.75rem">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/auth/register</span>
+      </p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="newuser@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Min. 6 characters" />
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="regRole">
+          <option value="user">user</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="testRegister()">Send Request</button>
+      <div class="response-box" id="regResponse">// response will appear here</div>
+    </div>
+
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    // ─── Init ──────────────────────────────────────────────────────────
+    const user  = JSON.parse(localStorage.getItem("user")  || "null");
+    const token = localStorage.getItem("token");
+
+    if (!user || !token) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("userEmail").textContent = user.email;
+    const badge = document.getElementById("userBadge");
+    badge.textContent = user.role;
+    badge.className = `badge badge-${user.role}`;
+    document.getElementById("tokenDisplay").textContent = token;
+
+    // ─── Endpoint Tests ────────────────────────────────────────────────
+    async function testMe() {
+      const res = await api.get("/api/auth/me", token);
+      document.getElementById("meResponse").textContent = JSON.stringify(res, null, 2);
+    }
+
+    async function testAdminUsers() {
+      const res = await api.get("/api/auth/admin/users", token);
+      document.getElementById("adminResponse").textContent = JSON.stringify(res, null, 2);
+    }
+
+    async function testHealth() {
+      const res = await api.get("/api/health");
+      document.getElementById("healthResponse").textContent = JSON.stringify(res, null, 2);
+    }
+
+    async function testInvalidToken() {
+      const res = await api.get("/api/auth/me", "invalid.token.here");
+      document.getElementById("invalidResponse").textContent = JSON.stringify(res, null, 2);
+    }
+
+    async function testRegister() {
+      const email    = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const role     = document.getElementById("regRole").value;
+      const res = await api.post("/api/auth/register", { email, password, role });
+      document.getElementById("regResponse").textContent = JSON.stringify(res, null, 2);
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Auth Microservice</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <div class="card">
+    <h1>🔐 Sign In</h1>
+    <p class="subtitle">Auth Microservice Demo</p>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" />
+    </div>
+
+    <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">Sign In</button>
+
+    <div class="alert alert-success" id="successAlert"></div>
+    <div class="alert alert-error"   id="errorAlert"></div>
+
+    <div class="link-row">
+      Don't have an account? <a href="register.html">Register</a>
+    </div>
+    <div class="link-row" style="margin-top:0.5rem">
+      <a href="forgot.html">Forgot password?</a>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    async function handleLogin() {
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const btn      = document.getElementById("loginBtn");
+
+      hideAlerts();
+
+      if (!email || !password) {
+        showAlert("errorAlert", "Email and password are required.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Signing in...";
+
+      try {
+        const data = await api.post("/api/auth/login", { email, password });
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user",  JSON.stringify(data.user));
+        showAlert("successAlert", `Welcome back, ${data.user.email}! Redirecting...`);
+        setTimeout(() => window.location.href = "dashboard.html", 1000);
+      } catch (err) {
+        showAlert("errorAlert", err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+      }
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") handleLogin();
+    });
+  </script>
+</body>
+</html>

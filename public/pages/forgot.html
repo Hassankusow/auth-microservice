@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Password — Auth Microservice</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <div class="card">
+    <h1>🔑 Reset Password</h1>
+    <p class="subtitle">Enter your email to get a reset token</p>
+
+    <!-- Step 1: Request token -->
+    <div id="step1">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" />
+      </div>
+      <button class="btn btn-primary" onclick="requestReset()">Send Reset Token</button>
+    </div>
+
+    <!-- Step 2: Use token to reset -->
+    <div id="step2" style="display:none">
+      <div class="alert alert-info show" id="tokenDisplay"></div>
+      <div class="form-group" style="margin-top:1rem">
+        <label for="token">Reset Token</label>
+        <input type="text" id="token" placeholder="Paste token here" />
+      </div>
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input type="password" id="newPassword" placeholder="Min. 6 characters" />
+      </div>
+      <button class="btn btn-primary" onclick="doReset()">Reset Password</button>
+    </div>
+
+    <div class="alert alert-success" id="successAlert"></div>
+    <div class="alert alert-error"   id="errorAlert"></div>
+
+    <div class="link-row">
+      <a href="login.html">Back to Sign In</a>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    async function requestReset() {
+      const email = document.getElementById("email").value.trim();
+      hideAlerts();
+
+      if (!email) { showAlert("errorAlert", "Email is required."); return; }
+
+      try {
+        const data = await api.post("/api/auth/forgot-password", { email });
+        document.getElementById("step1").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+        document.getElementById("tokenDisplay").textContent =
+          `Token (demo — normally emailed): ${data.reset_token}`;
+        document.getElementById("token").value = data.reset_token || "";
+      } catch (err) {
+        showAlert("errorAlert", err.message);
+      }
+    }
+
+    async function doReset() {
+      const token       = document.getElementById("token").value.trim();
+      const newPassword = document.getElementById("newPassword").value;
+      hideAlerts();
+
+      if (!token || !newPassword) {
+        showAlert("errorAlert", "Token and new password are required.");
+        return;
+      }
+
+      try {
+        const data = await api.post("/api/auth/reset-password", { token, newPassword });
+        showAlert("successAlert", `${data.message} Redirecting to login...`);
+        setTimeout(() => window.location.href = "login.html", 1500);
+      } catch (err) {
+        showAlert("errorAlert", err.message);
+      }
+    }
+  </script>
+</body>
+</html>

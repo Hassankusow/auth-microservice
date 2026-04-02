@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — Auth Microservice</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <div class="card">
+    <h1>✨ Create Account</h1>
+    <p class="subtitle">Auth Microservice Demo</p>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Min. 6 characters" />
+    </div>
+
+    <div class="form-group">
+      <label for="role">Role</label>
+      <select id="role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" id="registerBtn" onclick="handleRegister()">Create Account</button>
+
+    <div class="alert alert-success" id="successAlert"></div>
+    <div class="alert alert-error"   id="errorAlert"></div>
+
+    <div class="link-row">
+      Already have an account? <a href="login.html">Sign in</a>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    async function handleRegister() {
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const role     = document.getElementById("role").value;
+      const btn      = document.getElementById("registerBtn");
+
+      hideAlerts();
+
+      if (!email || !password) {
+        showAlert("errorAlert", "Email and password are required.");
+        return;
+      }
+
+      if (password.length < 6) {
+        showAlert("errorAlert", "Password must be at least 6 characters.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Creating account...";
+
+      try {
+        const data = await api.post("/api/auth/register", { email, password, role });
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user",  JSON.stringify(data.user));
+        showAlert("successAlert", "Account created! Redirecting to dashboard...");
+        setTimeout(() => window.location.href = "dashboard.html", 1000);
+      } catch (err) {
+        showAlert("errorAlert", err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Create Account";
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") handleRegister();
+    });
+  </script>
+</body>
+</html>
