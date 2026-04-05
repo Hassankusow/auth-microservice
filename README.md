@@ -1,32 +1,25 @@
 # Auth Microservice
 
-A RESTful authentication service built with Node.js, Express, and PostgreSQL. Features a client-facing demo frontend built with HTML, CSS, Bootstrap, and jQuery — making AJAX calls to the auth API.
+A RESTful authentication service built with Node.js, Express, and PostgreSQL. Includes a live demo frontend for testing all API endpoints directly in the browser — no Postman required.
 
 ---
 
 ## Features
 
-- User registration with bcrypt password hashing
-- Login with JWT-based session handling
-- Password reset via secure token (forgot password flow)
-- Role-based access control (RBAC) — user / admin roles
-- Protected routes using JWT middleware
-- Demo frontend: Register, Login, and Password Reset pages
+- User registration with bcrypt password hashing (cost factor 10)
+- JWT-based session handling with configurable expiry
+- Two-step password reset via cryptographically secure tokens
+- Role-based access control (RBAC) — `user` and `admin` roles
+- JWT and RBAC middleware for protecting routes
+- Live demo frontend — register, login, reset password, and test all endpoints
 
 ---
 
 ## Tech Stack
 
-**Backend**
-- Node.js + Express (REST API)
-- PostgreSQL (relational database)
-- bcryptjs (password hashing)
-- jsonwebtoken (JWT auth)
-- dotenv, cors
+**Backend:** Node.js, Express, PostgreSQL, bcryptjs, jsonwebtoken
 
-**Frontend (Demo)**
-- HTML, CSS, Bootstrap 5
-- jQuery + AJAX (calls the REST API)
+**Frontend (Demo):** Vanilla HTML, CSS, JavaScript — dark-themed UI with live API response display
 
 ---
 
@@ -35,28 +28,26 @@ A RESTful authentication service built with Node.js, Express, and PostgreSQL. Fe
 ```
 auth-microservice/
 ├── src/
-│   ├── server.js           # Entry point
+│   ├── server.js              # Express app entry point
 │   ├── db/
-│   │   ├── connection.js   # PostgreSQL pool
-│   │   └── schema.sql      # Table definitions
+│   │   ├── connection.js      # PostgreSQL pool setup
+│   │   └── schema.sql         # Users table definition
 │   ├── models/
-│   │   └── UserModel.js    # User DB queries (OOP class)
+│   │   └── UserModel.js       # User DB queries (OOP class)
 │   ├── middleware/
-│   │   ├── verifyToken.js  # JWT auth middleware
-│   │   └── checkRole.js    # RBAC middleware
+│   │   ├── verifyToken.js     # JWT Bearer token validation
+│   │   └── checkRole.js       # RBAC role guard
 │   └── routes/
-│       └── auth.js         # Auth route handlers
+│       └── auth.js            # All auth route handlers
 ├── public/
-│   ├── css/
-│   │   └── styles.css
-│   ├── js/
-│   │   └── auth.js         # jQuery AJAX logic
+│   ├── css/styles.css
+│   ├── js/api.js              # Shared fetch client
 │   └── pages/
 │       ├── login.html
 │       ├── register.html
-│       └── reset-password.html
+│       ├── forgot.html        # Two-step password reset flow
+│       └── dashboard.html     # Live endpoint testing panel
 ├── .env.example
-├── .gitignore
 ├── package.json
 └── README.md
 ```
@@ -65,49 +56,82 @@ auth-microservice/
 
 ## Setup
 
-1. **Clone the repo**
+**1. Clone and install**
 ```bash
 git clone https://github.com/Hassankusow/auth-microservice
 cd auth-microservice
-```
-
-2. **Install dependencies**
-```bash
 npm install
 ```
 
-3. **Set up environment variables**
+**2. Configure environment**
 ```bash
 cp .env.example .env
-# Fill in your PostgreSQL credentials and JWT secret
 ```
 
-4. **Create the database**
+Edit `.env`:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=auth_db
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+JWT_SECRET=your_super_secret_key
+JWT_EXPIRES_IN=1h
+RESET_TOKEN_EXPIRES=900000
+PORT=3000
+```
+
+**3. Create the database schema**
 ```bash
-psql -U your_db_user -d postgres -f src/db/schema.sql
+psql -U your_db_user -d auth_db -f src/db/schema.sql
 ```
 
-5. **Run the server**
+**4. Start the server**
 ```bash
-npm run dev
+node src/server.js
 ```
 
-6. **Open the demo frontend**
+**5. Open the demo**
 
-Visit `http://localhost:3000` in your browser.
+Visit `http://localhost:3000` — register an account and test all endpoints live from the dashboard.
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/auth/register` | Register a new user | No |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/register` | Register new user, returns JWT | No |
 | POST | `/api/auth/login` | Login, returns JWT | No |
-| POST | `/api/auth/forgot-password` | Request password reset token | No |
+| POST | `/api/auth/forgot-password` | Generate password reset token | No |
 | POST | `/api/auth/reset-password` | Reset password with token | No |
-| GET | `/api/auth/me` | Get current user profile | Yes (JWT) |
-| GET | `/api/admin/users` | List all users | Yes (admin role) |
+| GET | `/api/auth/me` | Get current user profile | JWT |
+| GET | `/api/auth/admin/users` | List all users | JWT + admin role |
+| GET | `/api/health` | Service health check | No |
+
+---
+
+## Example Requests
+
+**Register**
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"secret123","role":"user"}'
+```
+
+**Login**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"secret123"}'
+```
+
+**Protected route**
+```bash
+curl http://localhost:3000/api/auth/me \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
 
 ---
 
