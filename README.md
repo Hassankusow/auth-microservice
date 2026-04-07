@@ -1,5 +1,7 @@
 # Auth Microservice
 
+[![Tests](https://github.com/Hassankusow/auth-microservice/actions/workflows/tests.yml/badge.svg)](https://github.com/Hassankusow/auth-microservice/actions/workflows/tests.yml)
+
 A RESTful authentication service built with Node.js, Express, and PostgreSQL. Includes a live demo frontend for testing all API endpoints directly in the browser — no Postman required.
 
 ---
